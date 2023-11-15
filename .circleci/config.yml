@@ -2,35 +2,48 @@ version: 2.1
 
 jobs:
     build_and_push:
+        #defining the docker image with python 3.8
         docker:
             - image: cimg/python:3.8
         steps:
             - checkout
+        #setting up a remote docker environment
             - setup_remote_docker:
                 version: 19.03.13
+        #running the sample message hellodockerhub
             - run:
                 name: Hello Docker
                 command: echo "Hello DockerHub"
+        #installing the pytest as dependency
             - run:
                 name: Install pytest Dependency
                 command: pip install pytest
+        #running the testcases using pytest 
             - run:
                 name: Run test_sparse_recommender.py
                 command: pytest test_sparse_recommender.py
+        #building the docker image with the specific tag
             - run:
                 name: Docker build
                 command: docker build -t $DOCKERHUB_USERNAME/myapp:${CIRCLE_SHA1} .
+        #Authenticate with dockerhub using credentials
             - run:
                 name: Authenticate with Docker Hub
                 command: echo "$DOCKERHUB_PASS" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+        #push the docker image to dockerhub
             - run:
                 name: Push Docker Image to Docker Hub
                 command: docker push $DOCKERHUB_USERNAME/myapp:${CIRCLE_SHA1}
+
+#Defining the workflow build and deploy
+                
 workflows:
     version: 2
     build_and_deploy:
+        #specifying the build and push job for the workflow
         jobs:
             - build_and_push:
+            #running the job in the main branch
                 filters:
                     branches:
                         only: main
